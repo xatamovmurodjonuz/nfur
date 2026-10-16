@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Time Capitalism: Army Empire - Spell Edition</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --gold: #f39c12;
+            --gold-light: #f1c40f;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.85);
+            --text-color: #f8fafc;
+            --purple: #a855f7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            padding-bottom: 40px;
+        }
+
+        /* Header UI */
+        .header {
+            width: 100%;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 2px solid var(--gold);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(45deg, #f1c40f, #e67e22);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
+
+        .capital-container {
+            margin: 12px 0;
+            text-align: center;
+        }
+
+        .capital-amount {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--gold-light);
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+        }
+
+        .income-rate {
+            font-size: 13px;
+            color: #2ecc71;
+            font-weight: 600;
+        }
+
+        /* Leader Card */
+        .leader-card {
+            width: 90%;
+            max-width: 400px;
+            background: var(--card-bg);
+            border: 2px solid var(--gold);
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .leader-avatar {
+            font-size: 40px;
+            background: rgba(241, 196, 15, 0.2);
+            padding: 8px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+        }
+
+        .leader-details { flex-grow: 1; }
+        .leader-name { font-size: 15px; font-weight: bold; color: #fff; }
+        .leader-stats { font-size: 11px; color: #cbd5e1; margin-top: 2px; }
+
+        /* Battle Arena Section */
+        .battle-card {
+            width: 90%;
+            max-width: 400px;
+            background: rgba(220, 38, 38, 0.2);
+            border: 2px solid #ef4444;
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .battle-card.boss-mode {
+            background: rgba(147, 51, 234, 0.3);
+            border: 2px solid #a855f7;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+        }
+
+        .battle-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #fca5a5;
+            margin-bottom: 6px;
+        }
+
+        .boss-mode .battle-title { color: #e9d5ff; font-size: 18px; }
+
+        .battle-btn {
+            width: 100%;
+            background: linear-gradient(45deg, #dc2626, #ef4444);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+            margin-top: 8px;
+        }
+
+        .boss-mode .battle-btn {
+            background: linear-gradient(45deg, #7e22ce, #a855f7);
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.5);
+        }
+
+        .battle-progress {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin-top: 8px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .battle-bar { height: 100%; width: 0%; background: #ef4444; transition: width 0.1s linear; }
+        .boss-mode .battle-bar { background: #a855f7; }
+
+        /* SPELLS SECTION */
+        .spells-container {
+            width: 90%;
+            max-width: 400px;
+            margin-bottom: 15px;
+        }
+
+        .spell-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .spell-card {
+            background: rgba(147, 51, 234, 0.15);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            border-radius: 12px;
+            padding: 8px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .spell-icon { font-size: 24px; margin-bottom: 4px; }
+        .spell-name { font-size: 11px; font-weight: bold; color: #e9d5ff; }
+        .spell-desc { font-size: 9px; color: #c084fc; margin: 3px 0; }
+
+        .spell-btn {
+            width: 100%;
+            background: linear-gradient(45deg, #9333ea, #c084fc);
+            color: white;
+            border: none;
+            padding: 5px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .spell-btn:disabled { background: #475569; opacity: 0.6; cursor: not-allowed; }
+
+        /* Clicker & Dropping Resources Area */
+        .game-field {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 140px;
+            margin: 5px 0 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .click-btn {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #f39c12 0%, #d35400 100%);
+            border: 4px solid var(--gold-light);
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px;
+            cursor: pointer;
+            outline: none;
+            z-index: 2;
+        }
+
+        .click-btn:active { transform: scale(0.92); }
+
+        .drop-item {
+            position: absolute;
+            font-size: 30px;
+            cursor: pointer;
+            animation: spawnPop 0.4s ease-out;
+            z-index: 10;
+        }
+
+        @keyframes spawnPop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+        .floating-text {
+            position: absolute;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 8px var(--gold);
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 20;
+        }
+
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-35px); } }
+
+        /* Upgrades Container */
+        .upgrades-container { width: 90%; max-width: 400px; }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin: 10px 0 6px 0;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        .upgrade-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .upgrade-info { display: flex; align-items: center; gap: 10px; }
+        .upgrade-icon { font-size: 22px; }
+        .upgrade-name { font-size: 13px; font-weight: bold; }
+        .upgrade-desc { font-size: 10px; color: #94a3b8; }
+
+        .buy-btn {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .buy-btn:disabled { background: #475569; opacity: 0.6; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="title">Time Capitalism</div>
+        <div style="font-size:11px; color:#94a3b8;">Army Empire</div>
+    </div>
+
+    <!-- Pul -->
+    <div class="capital-container">
+        <div class="capital-amount">🪙 <span id="capital">0</span></div>
+        <div class="income-rate">+<span id="passiveRate">0</span> / sek <span id="boostBadge" style="color:#f1c40f;"></span></div>
+    </div>
+
+    <!-- Sarkarda -->
+    <div class="leader-card">
+        <div class="leader-avatar">👑</div>
+        <div class="leader-details">
+            <div class="leader-name">Buyuk Sarkarda (Lvl <span id="leaderLvl">1</span>)</div>
+            <div class="leader-stats">⚔️ Umumi kuch: <span id="totalPower">10</span></div>
+            <div class="leader-stats">🛡️ Safdagi askarlar: <span id="soldierCount">0</span> ta</div>
+        </div>
+        <button class="buy-btn" onclick="upgradeLeader()">Daraja +1<br>(<span id="leaderCost">100</span> 🪙)</button>
+    </div>
+
+    <!-- JANG ARENASI -->
+    <div class="battle-card" id="battleCard">
+        <div class="battle-title" id="battleTitle">⚔️ JANG ARENASI — WAVE <span id="waveNum">1</span></div>
+        <div style="font-size:11px; color:#cbd5e1;" id="battleStatus">
+            Dushman kuchi: <b id="enemyPower">15</b> | Mukofot: <b id="waveReward">50</b> 🪙
+        </div>
+        <button class="battle-btn" id="startBattleBtn" onclick="startBattle()">Hujum qilish!</button>
+        <div class="battle-progress" id="battleProgress">
+            <div class="battle-bar" id="battleBar"></div>
+        </div>
+    </div>
+
+    <!-- SEHRLAR VA KO'NIKMALAR PANELI -->
+    <div class="spells-container">
+        <div class="section-title">🔮 Maxsus Sehrlar & Boosterlar</div>
+        <div class="spell-grid">
+            <!-- x2 Income -->
+            <div class="spell-card">
+                <div class="spell-icon">⚡</div>
+                <div class="spell-name">2x Daromad</div>
+                <div class="spell-desc">30 sek x2 Daromad</div>
+                <button class="spell-btn" id="spellX2Btn" onclick="castSpell('x2')">Ishtirok: 150 🪙</button>
+            </div>
+            <!-- Dragon Fire -->
+            <div class="spell-card">
+                <div class="spell-icon">🔥</div>
+                <div class="spell-name">Olov Zarbasi</div>
+                <div class="spell-desc">Dushman kuchi -25%</div>
+                <button class="spell-btn" id="spellFireBtn" onclick="castSpell('fire')">Ishtirok: 200 🪙</button>
+            </div>
+            <!-- Shield -->
+            <div class="spell-card">
+                <div class="spell-icon">🛡️</div>
+                <div class="spell-name">Ilohiy Qalqon</div>
+                <div class="spell-desc">Kuch +50% (30sek)</div>
+                <button class="spell-btn" id="spellShieldBtn" onclick="castSpell('shield')">Ishtirok: 250 🪙</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resurslar maydoni -->
+    <div class="game-field" id="gameField">
+        <button class="click-btn" onclick="handleClick(event)">🐪</button>
+    </div>
+
+    <!-- Xaridlar -->
+    <div class="upgrades-container">
+        <div class="section-title">Qoʻshin Yollash</div>
+
+        <div class="upgrade-card">
+            <div class="upgrade-info">
+                <div class="upgrade-icon">🗡️</div>
+                <div>
+                    <div class="upgrade-name">Piyoda Askar</div>
+                    <div class="upgrade-desc">+2 Kuch | +1 Passiv/sek</div>
+                </div>
+            </div>
+            <button class="buy-btn" id="buyInfantryBtn" onclick="buyUnit('infantry')">
+                Sotib olish: <span id="infantryCost">30</span>
+            </button>
+        </div>
+
+        <div class="upgrade-card">
+            <div class="upgrade-info">
+                <div class="upgrade-icon">🏹</div>
+                <div>
+                    <div class="upgrade-name">Kamonchi Askar</div>
+                    <div class="upgrade-desc">+5 Kuch | +3 Passiv/sek</div>
+                </div>
+            </div>
+            <button class="buy-btn" id="buyArcherBtn" onclick="buyUnit('archer')">
+                Sotib olish: <span id="archerCost">80</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram ? window.Telegram.WebApp : null;
+        if (tg) tg.expand();
+
+        let capital = 0;
+        let clickPower = 1;
+        let passiveIncome = 0;
+
+        let leaderLvl = 1;
+        let leaderCost = 100;
+        let soldierCount = 0;
+        let basePower = 10;
+        let totalPower = 10;
+
+        let infantryCost = 30;
+        let archerCost = 80;
+
+        // Jang va Boss ko'rsatgichlari
+        let currentWave = 1;
+        let enemyPower = 15;
+        let waveReward = 50;
+        let inBattle = false;
+        let isBossWave = false;
+
+        // SEHR SHARTLARI VA KO'RSATGICHLARI
+        let incomeMultiplier = 1;
+        let powerMultiplier = 1;
+
+        const resourceIcons = ['💰', '💎', '🎁', '🪙'];
+
+        setInterval(() => {
+            let actualPassive = passiveIncome * incomeMultiplier;
+            if (actualPassive > 0) {
+                capital += actualPassive;
+                updateUI();
+            }
+        }, 1000);
+
+        setInterval(() => {
+            spawnFloatingResource();
+        }, 3500);
+
+        function spawnFloatingResource() {
+            const field = document.getElementById('gameField');
+            const item = document.createElement('div');
+            item.className = 'drop-item';
+            const icon = resourceIcons[Math.floor(Math.random() * resourceIcons.length)];
+            item.innerText = icon;
+
+            const x = Math.random() * 280 + 20;
+            const y = Math.random() * 90 + 10;
+            item.style.left = `${x}px`;
+            item.style.top = `${y}px`;
+
+            item.onclick = (e) => {
+                e.stopPropagation();
+                let reward = (Math.floor(Math.random() * 15) + 10 * leaderLvl) * incomeMultiplier;
+                capital += reward;
+                createFloatingText(e, `+${reward} ${icon}`);
+                item.remove();
+                if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+                updateUI();
+            };
+
+            field.appendChild(item);
+            setTimeout(() => { if (item.parentNode) item.remove(); }, 4000);
+        }
+
+        function handleClick(e) {
+            let earned = clickPower * incomeMultiplier;
+            capital += earned;
+            createFloatingText(e, `+${earned}`);
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            updateUI();
+        }
+
+        function createFloatingText(e, text) {
+            const field = document.getElementById('gameField');
+            const rect = field.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const el = document.createElement('div');
+            el.className = 'floating-text';
+            el.innerText = text;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+
+            field.appendChild(el);
+            setTimeout(() => el.remove(), 800);
+        }
+
+        /* SEHRLAR ISHLATISH LOGIKASI */
+        function castSpell(type) {
+            if (type === 'x2' && capital >= 150) {
+                capital -= 150;
+                incomeMultiplier = 2;
+                document.getElementById('boostBadge').innerText = '(⚡ x2 Active)';
+                setTimeout(() => {
+                    incomeMultiplier = 1;
+                    document.getElementById('boostBadge').innerText = '';
+                    updateUI();
+                }, 30000); // 30 sek
+            } else if (type === 'fire' && capital >= 200) {
+                capital -= 200;
+                enemyPower = Math.floor(enemyPower * 0.75); // Dushman kuchi -25%
+                alert('🔥 Olov Zarbasi ishlatildi! Dushman kuchi 25% ga kamaytirildi.');
+            } else if (type === 'shield' && capital >= 250) {
+                capital -= 250;
+                powerMultiplier = 1.5; // Kuch +50%
+                alert('🛡️ Ilohiy Qalqon faol! Qo\'shin kuchi 30 soniyaga +50% oshdi.');
+                setTimeout(() => {
+                    powerMultiplier = 1;
+                    updateUI();
+                }, 30000);
+            }
+            updateUI();
+        }
+
+        /* JANG VA BOSS LOGIKASI */
+        function startBattle() {
+            if (inBattle) return;
+            inBattle = true;
+
+            const btn = document.getElementById('startBattleBtn');
+            const progress = document.getElementById('battleProgress');
+            const bar = document.getElementById('battleBar');
+            const status = document.getElementById('battleStatus');
+
+            btn.disabled = true;
+            progress.style.display = 'block';
+            bar.style.width = '0%';
+            status.innerHTML = isBossWave ? '🔥 BOSS BATTLES KETMOQDA...' : '⚔️ Jang ketmoqda...';
+
+            let duration = isBossWave ? 3000 : 2000;
+            let start = Date.now();
+
+            let timer = setInterval(() => {
+                let timePassed = Date.now() - start;
+                let progressPercent = (timePassed / duration) * 100;
+                bar.style.width = `${progressPercent}%`;
+
+                if (timePassed >= duration) {
+                    clearInterval(timer);
+                    inBattle = false;
+                    progress.style.display = 'none';
+                    btn.disabled = false;
+
+                    if (totalPower >= enemyPower) {
+                        capital += waveReward;
+                        if (isBossWave) {
+                            leaderLvl++;
+                            basePower += 15;
+                            alert(`🔥 DAXSHATLI G'ALABA!\n👹 BOSS Wave ${currentWave} mag'lub etildi!\nMukofot: +${waveReward} 🪙 & Sarkardaga +1 LEVEL UP! 🎉`);
+                        } else {
+                            alert(`🎉 G'ALABA! Wave ${currentWave} tor-mor etildi!\nMukofot: +${waveReward} 🪙`);
+                        }
+
+                        currentWave++;
+                        setupNextWave();
+                        if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                    } else {
+                        alert(`❌ MAG'LUBIYAT! ${isBossWave ? 'BOSS' : 'Dushman'} kuchi (${enemyPower}) sizning kuchingizdan (${totalPower}) yuqori.\nQo'shinni kuchaytiring!`);
+                        if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                    }
+                    updateUI();
+                }
+            }, 50);
+        }
+
+        function setupNextWave() {
+            isBossWave = (currentWave % 5 === 0);
+
+            if (isBossWave) {
+                enemyPower = Math.floor(enemyPower * 2.8);
+                waveReward = Math.floor(waveReward * 3.5);
+            } else {
+                enemyPower = Math.floor(enemyPower * 1.5);
+                waveReward = Math.floor(waveReward * 1.7);
+            }
+        }
+
+        function upgradeLeader() {
+            if (capital >= leaderCost) {
+                capital -= leaderCost;
+                leaderLvl++;
+                basePower += 15;
+                leaderCost = Math.floor(leaderCost * 1.8);
+                updateUI();
+            }
+        }
+
+        function buyUnit(type) {
+            if (type === 'infantry' && capital >= infantryCost) {
+                capital -= infantryCost;
+                soldierCount++;
+                basePower += 2;
+                passiveIncome += 1;
+                infantryCost = Math.floor(infantryCost * 1.5);
+            } else if (type === 'archer' && capital >= archerCost) {
+                capital -= archerCost;
+                soldierCount++;
+                basePower += 5;
+                passiveIncome += 3;
+                archerCost = Math.floor(archerCost * 1.6);
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            totalPower = Math.floor(basePower * powerMultiplier);
+
+            document.getElementById('capital').innerText = Math.floor(capital).toLocaleString();
+            document.getElementById('passiveRate').innerText = passiveIncome * incomeMultiplier;
+            document.getElementById('leaderLvl').innerText = leaderLvl;
+            document.getElementById('leaderCost').innerText = leaderCost.toLocaleString();
+            document.getElementById('totalPower').innerText = totalPower;
+            document.getElementById('soldierCount').innerText = soldierCount;
+
+            const card = document.getElementById('battleCard');
+            const title = document.getElementById('battleTitle');
+
+            if (isBossWave) {
+                card.classList.add('boss-mode');
+                title.innerHTML = `👹 BOSS WAVE ${currentWave} 👹`;
+            } else {
+                card.classList.remove('boss-mode');
+                title.innerHTML = `⚔️ JANG ARENASI — WAVE ${currentWave}`;
+            }
+
+            document.getElementById('enemyPower').innerText = enemyPower;
+            document.getElementById('waveReward').innerText = waveReward;
+
+            if (!inBattle) {
+                document.getElementById('battleStatus').innerHTML = `${isBossWave ? '👹 Boss kuchi' : 'Dushman kuchi'}: <b>${enemyPower}</b> | Mukofot: <b>${waveReward}</b> 🪙`;
+            }
+
+            document.getElementById('infantryCost').innerText = infantryCost.toLocaleString();
+            document.getElementById('archerCost').innerText = archerCost.toLocaleString();
+
+            document.getElementById('buyInfantryBtn').disabled = capital < infantryCost;
+            document.getElementById('buyArcherBtn').disabled = capital < archerCost;
+
+            document.getElementById('spellX2Btn').disabled = capital < 150 || incomeMultiplier > 1;
+            document.getElementById('spellFireBtn').disabled = capital < 200;
+            document.getElementById('spellShieldBtn').disabled = capital < 250 || powerMultiplier > 1;
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>
